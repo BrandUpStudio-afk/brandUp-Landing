@@ -382,13 +382,10 @@ main section:nth-of-type(4) .qi .ph{max-height:none!important;margin-top:0!impor
   <h1 style="font-size:clamp(1.9rem,4.5vw,2.8rem)">¡Recibimos tu solicitud!</h1>
   <p id="gnom" style="font-size:1.1rem">Gracias. Ya estamos listos para revisar las redes de tu hotel.</p>
   <ol class="steps">
-    <li>Te escribimos por WhatsApp en <b>menos de 24 horas</b> para agendar tu diagnóstico gratis.</li>
+    <li>Recibimos tus datos y revisaremos la información de tu hotel.</li>
+    <li>Te contactaremos para agendar tu diagnóstico gratis.</li>
     <li>Hacemos una sesión de 20 a 30 minutos y revisamos tus redes.</li>
-    <li>Te enviamos un informe con hallazgos y un <b>plan de mejora</b> para las redes de tu hotel.</li>
   </ol>
-  <p>Para agilizar, envíanos tus datos por WhatsApp o por correo:</p>
-  <a class="btn" id="wal" href="https://wa.me/573170485140" target="_blank" rel="noopener">Confirmar por WhatsApp</a>
-  <a class="btn" id="mal" href="mailto:serviciosbrandup@gmail.com" style="margin:10px 0 0 8px;background:transparent;color:var(--b5);border:2px solid var(--b5);box-shadow:none">Enviar también por correo</a>
   <p style="margin-top:22px"><a href="#" id="back" style="color:var(--b5);font-weight:700">Volver</a></p>
 </div></div></section>
 
@@ -404,12 +401,37 @@ main section:nth-of-type(4) .qi .ph{max-height:none!important;margin-top:0!impor
     var ok=document.getElementById('ok'),oe=document.getElementById('okerr');
     oe.style.display=ok.checked?'none':'block';if(!ok.checked)fail=true;
     if(fail)return;
-    var msg='Hola, BrandUp. Solicité el diagnóstico gratis de redes para mi hotel.\n'+
+    var msg='Hola, BrandUp. Se recibió una nueva solicitud de diagnóstico gratis.\n'+
       'Nombre: '+v.nombre+'\nHotel: '+v.hotel+'\nWhatsApp: '+v.wa+'\nCorreo: '+v.mail+'\nInstagram: '+v.ig;
-    document.getElementById('wal').href='https://wa.me/573170485140?text='+encodeURIComponent(msg);
-    document.getElementById('mal').href='mailto:serviciosbrandup@gmail.com?subject='+encodeURIComponent('Solicitud de diagnóstico gratis: '+v.hotel)+'&body='+encodeURIComponent(msg);
-    document.getElementById('gnom').textContent='Gracias, '+v.nombre.split(' ')[0]+'. Ya estamos listos para revisar las redes de '+v.hotel+'.';
-    document.body.classList.add('thanks');window.scrollTo(0,0);
+
+    var submitBtn=f.querySelector('button[type="submit"]');
+    var originalBtn=submitBtn.textContent;
+    submitBtn.disabled=true;submitBtn.textContent='Enviando...';
+
+    fetch('https://formsubmit.co/ajax/serviciosbrandup@gmail.com',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        Nombre:v.nombre,
+        'Nombre del hotel':v.hotel,
+        WhatsApp:v.wa,
+        Correo:v.mail,
+        Instagram:v.ig,
+        _subject:'Solicitud de diagnóstico gratis: '+v.hotel,
+        _template:'table',
+        _captcha:'false'
+      })
+    }).then(function(r){
+      if(!r.ok)throw new Error('No se pudo enviar');
+      return r.json();
+    }).then(function(){
+      document.getElementById('gnom').textContent='Gracias, '+v.nombre.split(' ')[0]+'. Ya recibimos tus datos y revisaremos las redes de '+v.hotel+'.';
+      document.body.classList.add('thanks');window.scrollTo(0,0);
+    }).catch(function(){
+      alert('No pudimos enviar el formulario. Por favor, inténtalo nuevamente.');
+    }).finally(function(){
+      submitBtn.disabled=false;submitBtn.textContent=originalBtn;
+    });
   });
   var st=document.getElementById('stk');if('IntersectionObserver' in window){new IntersectionObserver(function(e){st.classList.toggle('on',!e[0].isIntersecting)}).observe(f)}
   document.getElementById('back').addEventListener('click',function(e){e.preventDefault();document.body.classList.remove('thanks');window.scrollTo(0,0)});
